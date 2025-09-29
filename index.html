@@ -263,9 +263,7 @@ function initSnake(){
       }
       // collision
       if(!infinite && (head.x<0||head.y<0||head.x>=cols||head.y>=rows || snake.slice(1).find(s=>s.x===head.x&&s.y===head.y))){
-        running=false; alert\('You died! Score: '\+score\);
-        saveScore('Snake', score || 0);
-        showLeaderboard('Snake'); return;
+        running=false; saveScore('Snake', score); alert('You died! Score: '+score); showLeaderboard('Snake'); return;
       }
       snake.unshift(head);
       const ai = apples.findIndex(a=>a.x===head.x&&a.y===head.y);
@@ -334,9 +332,7 @@ function initMinesweeper(){
       td.addEventListener('click', ()=>{
         if(flagged[r][c]||revealed[r][c]) return;
         revealed[r][c]=true; td.classList.add('revealed');
-        if(board[r][c]==='M'){ td.style.background='crimson'; td.textContent='💣'; alert\('Boom! You lost.'\);
-        saveScore('Minesweeper', score || 0);
-        showLeaderboard('Minesweeper'); show('menu'); return; }
+        if(board[r][c]==='M'){ td.style.background='crimson'; td.textContent='💣'; alert('Boom! You lost.'); showLeaderboard('Minesweeper'); return; }
         if(board[r][c]!==0) td.textContent = board[r][c];
         else {
           // flood
@@ -358,7 +354,7 @@ function initMinesweeper(){
         // check win
         let win=true;
         for(let i=0;i<R;i++) for(let j=0;j<C;j++) if(!revealed[i][j] && board[i][j]!=='M') win=false;
-        if(win){ alert('You Win! +5 bonus'); show('menu'); }
+        if(win){ saveScore('Minesweeper', 1); alert('You Win!'); showLeaderboard('Minesweeper'); }
       });
       tr.appendChild(td);
     }
@@ -418,9 +414,7 @@ function initTetris(){
   }
   Piece.prototype.lock=function(){
     for(let r=0;r<this.matrix.length;r++) for(let c=0;c<this.matrix[r].length;c++) if(this.matrix[r][c]){
-      if(this.y+r<0){ alert\('Game Over'\);
-        saveScore('Tetris', score || 0);
-        showLeaderboard('Tetris'); board=Array.from({length:ROW},()=>Array(COL).fill(vacant)); drawBoard(); return; }
+      if(this.y+r<0){ saveScore('Tetris', 0); alert('Game Over'); showLeaderboard('Tetris'); board=Array.from({length:ROW},()=>Array(COL).fill(vacant)); drawBoard(); return; }
       board[this.y+r][this.x+c]=this.color;
     }
     // clear rows
@@ -590,9 +584,7 @@ function initBreakout(){
       const bx=c*(bw+6)+30, by=r*(bh+6)+30;
       if(ball.x>bx && ball.x<bx+bw && ball.y>by && ball.y<by+bh){ bricks[r][c]=0; ball.dy*=-1; }
     }
-    if(ball.y>canvas.height){ alert\('You lost!'\);
-        saveScore('Breakout', score || 0);
-        showLeaderboard('Breakout'); show('menu'); return; }
+    if(ball.y>canvas.height){ saveScore('Breakout', 0); alert('You lost!'); showLeaderboard('Breakout'); return; }
     requestAnimationFrame(draw);
   }
   function move(e){ if(current!=='breakout') return; const rect=canvas.getBoundingClientRect(); const mx=e.clientX-rect.left; paddle.x=mx-paddle.w/2; paddle.x=Math.max(0,Math.min(canvas.width-paddle.w,paddle.x)); }
@@ -630,9 +622,7 @@ function initTic(){
   const table=document.createElement('table'); table.style.marginTop='12px';
   wrap.appendChild(table); screen.appendChild(wrap);
   let cells=[];
-  for(let r=0;r<3;r++){ const tr=document.createElement('tr'); for(let c=0;c<3;c++){ const td=document.createElement('td'); td.style.width='48px'; td.style.height='48px'; td.style.fontSize='20px'; td.addEventListener('click', ()=>{ if(td.textContent) return; td.textContent=currentPlayer; if(checkWin()){ alert\(currentPlayer\+'\ wins'\);
-        saveScore('Tic Tac Toe', score || 0);
-        showLeaderboard('Tic Tac Toe'); initTic(); } currentPlayer=currentPlayer==='X'?'O':'X'; }); tr.appendChild(td); cells.push(td);} table.appendChild(tr); }
+  for(let r=0;r<3;r++){ const tr=document.createElement('tr'); for(let c=0;c<3;c++){ const td=document.createElement('td'); td.style.width='48px'; td.style.height='48px'; td.style.fontSize='20px'; td.addEventListener('click', ()=>{ if(td.textContent) return; td.textContent=currentPlayer; if(checkWin()){ saveScore('TicTacToe', 1); alert(currentPlayer+' wins'); showLeaderboard('TicTacToe'); initTic(); } currentPlayer=currentPlayer==='X'?'O':'X'; }); tr.appendChild(td); cells.push(td);} table.appendChild(tr); }
   let currentPlayer='X';
 }
 
@@ -678,9 +668,7 @@ function initZombie(){
     // UI
     ctx.fillStyle='white'; ctx.font='14px Arial'; ctx.fillText('Wave: '+wave+' Score: '+score+' Health: '+player.health,10,18);
     if(zombies.length===0){ wave++; spawnZombies(2+wave); }
-    if(player.health<=0){ alert\('You died! Score: '\+score\);
-        saveScore('Snake', score || 0);
-        showLeaderboard('Snake'); show('menu'); return; }
+    if(player.health<=0){ saveScore('Zombie', score); alert('You died! Score: '+score); showLeaderboard('Zombie'); return; }
     requestAnimationFrame(draw);
   }
   canvas.addEventListener('click', e=>{
