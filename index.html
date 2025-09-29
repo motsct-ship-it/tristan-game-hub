@@ -303,7 +303,7 @@ function initMinesweeper(){
   hud.appendChild(info); wrap.appendChild(hud);
   screen.appendChild(wrap);
 
-  const R=8,C=8,M=10;
+  const R=8,C=8,M=6;
   let board = Array.from({length:R},()=>Array(C).fill(0));
   let revealed = Array.from({length:R},()=>Array(C).fill(false));
   let flagged = Array.from({length:R},()=>Array(C).fill(false));
@@ -344,7 +344,7 @@ function initMinesweeper(){
               if(nr>=0 && nc>=0 && nr<R && nc<C && !revealed[nr][nc] && !flagged[nr][nc]){
                 revealed[nr][nc]=true;
                 const cell = table.rows[nr].cells[nc];
-                cell.classList.add('revealed');
+                cell.classList.add('revealed'); cell.style.background='#334';
                 if(board[nr][nc]!==0) cell.textContent=board[nr][nc];
                 else q.push([nr,nc]);
               }
@@ -437,6 +437,7 @@ function initTetris(){
 }
 
 /* ---------------------- PONG ---------------------- */
+
 function initPong(){
   const wrap=document.createElement('div'); wrap.className='canvas-wrap';
   const canvas=document.createElement('canvas'); canvas.width=520; canvas.height=360; canvas.className='game-canvas';
@@ -447,6 +448,7 @@ function initPong(){
   let leftY=canvas.height/2-40, rightY=canvas.height/2-40, paddleH=80, paddleW=10;
   let ball={x:canvas.width/2,y:canvas.height/2,vx:4,vy:3,r:8};
   let scoreL=0, scoreR=0, running=true;
+  const keys={w:false,s:false,ArrowUp:false,ArrowDown:false};
 
   function draw(){
     if(current!=='pong'){ running=false; return; }
@@ -457,19 +459,37 @@ function initPong(){
     ctx.fillStyle='#ff7b7b'; ctx.fillRect(canvas.width-20,rightY,paddleW,paddleH);
     // ball
     ctx.beginPath(); ctx.fillStyle='#ffd166'; ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2); ctx.fill();
-    // move
+    // move ball
     ball.x+=ball.vx; ball.y+=ball.vy;
     if(ball.y<ball.r||ball.y>canvas.height-ball.r) ball.vy*=-1;
-    // left paddle collision
     if(ball.x-ball.r<20 && ball.y>leftY && ball.y<leftY+paddleH){ ball.vx*=-1; ball.x=30; }
-    // right paddle collision
     if(ball.x+ball.r>canvas.width-20 && ball.y>rightY && ball.y<rightY+paddleH){ ball.vx*=-1; ball.x=canvas.width-30; }
-    // score
     if(ball.x<0){ scoreR++; resetBall(); }
     if(ball.x>canvas.width){ scoreL++; resetBall(); }
+
+    // paddle movement
+    if(keys.w) leftY-=6; if(keys.s) leftY+=6;
+    if(keys.ArrowUp) rightY-=6; if(keys.ArrowDown) rightY+=6;
+    leftY=Math.max(0,Math.min(canvas.height-paddleH,leftY));
+    rightY=Math.max(0,Math.min(canvas.height-paddleH,rightY));
+
     requestAnimationFrame(draw);
   }
-  function resetBall(){ ball.x=canvas.width/2; ball.y=canvas.height/2; ball.vx=(Math.random()>0.5?1:-1)*4; ball.vy=(Math.random()*4-2); }
+
+  function resetBall(){
+    ball.x=canvas.width/2; ball.y=canvas.height/2;
+    ball.vx=(Math.random()>0.5?1:-1)*4; ball.vy=(Math.random()*4-2);
+  }
+
+  function keyDown(e){ if(e.key in keys) keys[e.key]=true; }
+  function keyUp(e){ if(e.key in keys) keys[e.key]=false; }
+  window.addEventListener('keydown',keyDown);
+  window.addEventListener('keyup',keyUp);
+  activeCleanup.push(()=>{ window.removeEventListener('keydown',keyDown); window.removeEventListener('keyup',keyUp); });
+
+  resetBall(); draw();
+}
+
 
   function key(e){
     if(current!=='pong') return;
@@ -487,6 +507,7 @@ function initPong(){
 
 /* ---------------------- FLAPPY ---------------------- */
 
+
 function initFlappy(){
   const wrap=document.createElement('div'); wrap.className='canvas-wrap';
   const canvas=document.createElement('canvas'); canvas.width=420; canvas.height=360; canvas.className='game-canvas';
@@ -494,37 +515,39 @@ function initFlappy(){
   const ctx=canvas.getContext('2d');
 
   let bird={x:80,y:180,vy:0};
-  const gravity=0.45, flap=-7.5;
+  const gravity=0.4, flap=-7;
   let pipes=[], score=0, running=true;
+  const gap=130;
 
   function spawnPipe(){
-    const gap=100;
     const top=Math.random()*(canvas.height-gap-60)+20;
     pipes.push({x:canvas.width,w:50,top:top,gap:gap});
   }
   spawnPipe();
+  setInterval(()=>{ if(running) spawnPipe(); }, 1500);
 
   function draw(){
     if(current!=='flappy'){ running=false; return; }
     ctx.fillStyle='#08121a'; ctx.fillRect(0,0,canvas.width,canvas.height);
 
     // pipes
-    pipes.forEach((p,i)=>{
+    for(let i=0;i<pipes.length;i++){
+      const p=pipes[i];
       ctx.fillStyle='#2a6b6b';
       ctx.fillRect(p.x,0,p.w,p.top);
       ctx.fillRect(p.x,p.top+p.gap,p.w,canvas.height-p.top-p.gap);
-      p.x-=2.8;
+      p.x-=2.4;
 
-      // score + collision
+      // score & collision
       if(p.x+ p.w<bird.x && !p.scored){ score++; p.scored=true; }
       if(bird.x+12>p.x && bird.x-12<p.x+p.w && (bird.y-12<p.top || bird.y+12>p.top+p.gap)){
-        saveScore("Flappy",score);
+        saveScore("Flappy", score);
         alert("You died! Score: "+score);
         showLeaderboard("Flappy");
         return;
       }
-      if(p.x+p.w<0) pipes.splice(i,1);
-    });
+    }
+    pipes=pipes.filter(p=>p.x+p.w>0);
 
     // bird
     bird.vy+=gravity;
@@ -533,7 +556,12 @@ function initFlappy(){
     ctx.beginPath(); ctx.arc(bird.x,bird.y,12,0,Math.PI*2); ctx.fill();
 
     // ground
-    if(bird.y>canvas.height-20){ saveScore("Flappy",score); alert("You died! Score: "+score); showLeaderboard("Flappy"); return; }
+    if(bird.y>canvas.height-20){
+      saveScore("Flappy", score);
+      alert("You died! Score: "+score);
+      showLeaderboard("Flappy");
+      return;
+    }
     ctx.fillStyle='#072'; ctx.fillRect(0,canvas.height-20,canvas.width,20);
 
     // score
@@ -541,6 +569,15 @@ function initFlappy(){
 
     requestAnimationFrame(draw);
   }
+
+  function flapIt(){ bird.vy=flap; }
+  function key(e){ if(e.code==='Space'){ flapIt(); } }
+  window.addEventListener('keydown',key);
+  activeCleanup.push(()=>window.removeEventListener('keydown',key));
+
+  draw();
+}
+
 
   function flapIt(){ bird.vy=flap; }
   function key(e){ if(e.code==='Space'){ flapIt(); } }
