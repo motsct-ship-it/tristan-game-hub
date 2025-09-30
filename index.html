@@ -10,7 +10,7 @@
   --bg1:#0b1220; --bg2:#121827; --accent:#1dd3bf; --panel:#0e1724; --muted:#9fb1c8;
 }
 *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
-html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#e6f0f8}
+html,body{height:100%;margin:0;background:linear-gradient(135deg,#0b1220,#1a2235);color:#e6f0f8}
 .app{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
 .hub{width:1100px;max-width:96vw;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:18px;box-shadow:0 10px 30px rgba(2,6,23,0.7);border:1px solid rgba(255,255,255,0.03)}
 .header{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -43,6 +43,25 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg1),var(
 
 /* small responsive */
 @media(max-width:980px){.grid{grid-template-columns:1fr}.sidebar{order:2}}
+
+.btn {
+  background: linear-gradient(180deg,#152238,#0d1625);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6), inset 0 -4px 10px rgba(0,0,0,0.3);
+}
+.btn:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.7), inset 0 -4px 10px rgba(0,0,0,0.25);
+}
+.panel {
+  backdrop-filter: blur(6px);
+}
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--accent);
+}
 </style>
 </head>
 <body>
@@ -61,12 +80,12 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg1),var(
 <button class="btn" onclick="show('minesweeper')">💣 Minesweeper</button>
 <button class="btn" onclick="show('tetris')">🧱 Tetris</button>
 <button class="btn" onclick="show('pong')">🏓 Pong</button>
-<button class="btn" onclick="show('flappy')">🐦 Flappy</button>
+<button class="btn" onclick="show('flappy')">🦘 Jumper</button>
 <button class="btn" onclick="show('breakout')">🎾 Breakout</button>
 <button class="btn" onclick="show('2048')">🔢 2048</button>
 <button class="btn" onclick="show('tic')">❌⭕ Tic Tac Toe</button>
 <button class="btn" onclick="show('zombie')">🧟 Zombie Survival</button>
-</div>
+<button class="btn" onclick="show('browser')">🌐 Browser</button></div>
 <div class="panel" style="margin-top:12px">
 <div class="small">Controls quick help</div>
 <ul style="margin:8px 0 0 16px;color:var(--muted)">
@@ -74,8 +93,8 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg1),var(
 <li>Minesweeper: Left click reveal, Right click flag</li>
 <li>Tetris: Arrows (← → rotate ↑ down ↓)</li>
 <li>Pong: WASD (left) vs Arrow keys (right)</li>
-<li>Flappy: Space to flap</li>
-<li>Breakout: Mouse or ← → to move paddle</li>
+<li>Jumper: A/D or ← → to move</li>
+<li>Breakout: Mouse or ← → to move paddle</li><li>Browser: Paste HTML or enter a URL (may be blocked by CORS).</li>
 <li>2048: Arrow keys or swipe</li>
 </ul>
 </div>
@@ -161,6 +180,7 @@ function show(name){
   else if(name==='tetris'){ initTetris(); }
   else if(name==='pong'){ initPong(); }
   else if(name==='flappy'){ initFlappy(); }
+  else if(name==='browser'){ initBrowser(); }
   else if(name==='breakout'){ initBreakout(); }
   else if(name==='2048'){ init2048(); }
   else if(name==='tic'){ initTic(); }
@@ -437,7 +457,6 @@ function initTetris(){
 }
 
 /* ---------------------- PONG ---------------------- */
-
 function initPong(){
   const wrap=document.createElement('div'); wrap.className='canvas-wrap';
   const canvas=document.createElement('canvas'); canvas.width=520; canvas.height=360; canvas.className='game-canvas';
@@ -454,12 +473,9 @@ function initPong(){
     if(current!=='pong'){ running=false; return; }
     ctx.fillStyle='#06121a'; ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle='#fff'; ctx.font='20px Arial'; ctx.fillText(scoreL,canvas.width*0.25,30); ctx.fillText(scoreR,canvas.width*0.75,30);
-    // paddles
     ctx.fillStyle='#1dd3bf'; ctx.fillRect(10,leftY,paddleW,paddleH);
     ctx.fillStyle='#ff7b7b'; ctx.fillRect(canvas.width-20,rightY,paddleW,paddleH);
-    // ball
     ctx.beginPath(); ctx.fillStyle='#ffd166'; ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2); ctx.fill();
-    // move ball
     ball.x+=ball.vx; ball.y+=ball.vy;
     if(ball.y<ball.r||ball.y>canvas.height-ball.r) ball.vy*=-1;
     if(ball.x-ball.r<20 && ball.y>leftY && ball.y<leftY+paddleH){ ball.vx*=-1; ball.x=30; }
@@ -467,7 +483,6 @@ function initPong(){
     if(ball.x<0){ scoreR++; resetBall(); }
     if(ball.x>canvas.width){ scoreL++; resetBall(); }
 
-    // paddle movement
     if(keys.w) leftY-=6; if(keys.s) leftY+=6;
     if(keys.ArrowUp) rightY-=6; if(keys.ArrowDown) rightY+=6;
     leftY=Math.max(0,Math.min(canvas.height-paddleH,leftY));
@@ -490,103 +505,97 @@ function initPong(){
   resetBall(); draw();
 }
 
-
-  function key(e){
-    if(current!=='pong') return;
-    const k=e.key.toLowerCase();
-    if(k==='w') leftY-=12; if(k==='s') leftY+=12; if(k==='a'){} if(k==='d'){}
-    if(e.key==='ArrowUp') rightY-=12; if(e.key==='ArrowDown') rightY+=12;
-    leftY=Math.max(0,Math.min(canvas.height-paddleH,leftY));
-    rightY=Math.max(0,Math.min(canvas.height-paddleH,rightY));
-  }
-  window.addEventListener('keydown', key);
-  activeCleanup.push(()=>window.removeEventListener('keydown', key));
-  resetBall(); draw();
-  activeCleanup.push(()=>{});
-}
-
 /* ---------------------- FLAPPY ---------------------- */
 
 
-function initFlappy(){
+function initFlappy(){ // replaced with Jumper game
   const wrap=document.createElement('div'); wrap.className='canvas-wrap';
-  const canvas=document.createElement('canvas'); canvas.width=420; canvas.height=360; canvas.className='game-canvas';
+  const canvas=document.createElement('canvas'); canvas.width=400; canvas.height=500; canvas.className='game-canvas';
   wrap.appendChild(canvas); screen.appendChild(wrap);
   const ctx=canvas.getContext('2d');
 
-  let bird={x:80,y:180,vy:0};
-  const gravity=0.4, flap=-7;
-  let pipes=[], score=0, running=true;
-  const gap=130;
+  let player={x:180,y:400,w:26,h:26,vy:-8};
+  let platforms=[];
+  let score=0, running=true;
+  const gravity=0.25;
 
-  function spawnPipe(){
-    const top=Math.random()*(canvas.height-gap-60)+20;
-    pipes.push({x:canvas.width,w:50,top:top,gap:gap});
+  // create starting platforms
+  for(let i=0;i<8;i++){
+    platforms.push({x:Math.random()*340,y:i*60,w:60,h:12});
   }
-  spawnPipe();
-  setInterval(()=>{ if(running) spawnPipe(); }, 1500);
 
   function draw(){
     if(current!=='flappy'){ running=false; return; }
     ctx.fillStyle='#08121a'; ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    // pipes
-    for(let i=0;i<pipes.length;i++){
-      const p=pipes[i];
-      ctx.fillStyle='#2a6b6b';
-      ctx.fillRect(p.x,0,p.w,p.top);
-      ctx.fillRect(p.x,p.top+p.gap,p.w,canvas.height-p.top-p.gap);
-      p.x-=2.4;
+    // move player
+    player.vy+=gravity;
+    player.y+=player.vy;
+    if(player.x<0) player.x=0;
+    if(player.x+player.w>canvas.width) player.x=canvas.width-player.w;
 
-      // score & collision
-      if(p.x+ p.w<bird.x && !p.scored){ score++; p.scored=true; }
-      if(bird.x+12>p.x && bird.x-12<p.x+p.w && (bird.y-12<p.top || bird.y+12>p.top+p.gap)){
-        saveScore("Flappy", score);
-        alert("You died! Score: "+score);
-        showLeaderboard("Flappy");
-        return;
+    // scroll platforms down as player rises
+    if(player.y<200){
+      const dy=200-player.y;
+      player.y=200;
+      score+=Math.floor(dy);
+      for(let p of platforms){ p.y+=dy; }
+    }
+
+    // draw platforms
+    ctx.fillStyle='#1dd3bf';
+    for(let p of platforms){
+      ctx.fillRect(p.x,p.y,p.w,p.h);
+      // collision check
+      if(player.vy>0 && player.x+player.w>p.x && player.x<p.x+p.w && player.y+player.h>p.y && player.y+player.h<p.y+player.h+player.vy){
+        player.vy=-8;
       }
     }
-    pipes=pipes.filter(p=>p.x+p.w>0);
 
-    // bird
-    bird.vy+=gravity;
-    bird.y+=bird.vy;
-    ctx.fillStyle='#ffd166';
-    ctx.beginPath(); ctx.arc(bird.x,bird.y,12,0,Math.PI*2); ctx.fill();
-
-    // ground
-    if(bird.y>canvas.height-20){
-      saveScore("Flappy", score);
-      alert("You died! Score: "+score);
-      showLeaderboard("Flappy");
-      return;
+    // recycle platforms
+    while(platforms.length && platforms[0].y>canvas.height){
+      platforms.shift();
+      platforms.push({x:Math.random()*340,y:-20,w:60,h:12});
     }
-    ctx.fillStyle='#072'; ctx.fillRect(0,canvas.height-20,canvas.width,20);
+
+    // draw player
+    ctx.fillStyle='#ffd166';
+    ctx.fillRect(player.x,player.y,player.w,player.h);
 
     // score
     ctx.fillStyle='white'; ctx.font='16px Arial'; ctx.fillText("Score: "+score,10,20);
 
+    // lose condition
+    
+    if(player.y>canvas.height){
+      player.y=200; 
+      player.vy=-8; 
+      score=Math.max(score-100,0); 
+    }
+
+
     requestAnimationFrame(draw);
   }
 
-  function flapIt(){ bird.vy=flap; }
-  function key(e){ if(e.code==='Space'){ flapIt(); } }
-  window.addEventListener('keydown',key);
-  activeCleanup.push(()=>window.removeEventListener('keydown',key));
+  // controls
+  const keys={a:false,d:false,ArrowLeft:false,ArrowRight:false};
+  function keyDown(e){ if(e.key in keys) keys[e.key]=true; }
+  function keyUp(e){ if(e.key in keys) keys[e.key]=false; }
+  window.addEventListener('keydown',keyDown);
+  window.addEventListener('keyup',keyUp);
+  activeCleanup.push(()=>{ window.removeEventListener('keydown',keyDown); window.removeEventListener('keyup',keyUp); });
+
+  function moveLoop(){
+    if(current!=='flappy') return;
+    if(keys.a||keys.ArrowLeft) player.x-=4;
+    if(keys.d||keys.ArrowRight) player.x+=4;
+    setTimeout(moveLoop,16);
+  }
+  moveLoop();
 
   draw();
 }
 
-
-  function flapIt(){ bird.vy=flap; }
-  function key(e){ if(e.code==='Space'){ flapIt(); } }
-  window.addEventListener('keydown',key);
-  activeCleanup.push(()=>window.removeEventListener('keydown',key));
-
-  setInterval(()=>{ if(running && Math.random()<0.6) spawnPipe(); },1800);
-  draw();
-}
 
 
 /* ---------------------- BREAKOUT ---------------------- */
@@ -733,6 +742,80 @@ function initZombie(){
 
 /* helper: stop on menu show */
 window.show = show;
+
+
+
+function initBrowser(){
+  const wrap=document.createElement('div'); wrap.className='canvas-wrap';
+  const container=document.createElement('div'); container.style.width='100%'; container.style.maxWidth='720px';
+  container.style.display='flex'; container.style.flexDirection='column'; container.style.gap='8px';
+  
+  // URL input
+  const urlRow=document.createElement('div'); urlRow.style.display='flex'; urlRow.style.gap='6px';
+  const urlInput=document.createElement('input'); urlInput.type='text'; urlInput.placeholder='https://example.com or paste HTML below';
+  urlInput.style.flex='1'; urlInput.style.padding='8px'; urlInput.style.borderRadius='8px';
+  urlInput.style.border='1px solid rgba(255,255,255,0.1)'; urlInput.id='browserUrl';
+  const goBtn=document.createElement('button'); goBtn.className='btn'; goBtn.textContent='Go';
+  urlRow.append(urlInput,goBtn);
+
+  // textarea for HTML paste
+  const htmlPaste=document.createElement('textarea'); htmlPaste.placeholder='Paste HTML here and click Render';
+  htmlPaste.style.width='100%'; htmlPaste.style.height='120px'; htmlPaste.style.padding='8px';
+  htmlPaste.style.borderRadius='8px'; htmlPaste.style.border='1px solid rgba(255,255,255,0.1)'; htmlPaste.id='browserPaste';
+
+  // action row
+  const actionRow=document.createElement('div'); actionRow.style.display='flex'; actionRow.style.gap='8px';
+  const renderBtn=document.createElement('button'); renderBtn.className='btn'; renderBtn.textContent='Render HTML';
+  const openBtn=document.createElement('button'); openBtn.className='btn'; openBtn.textContent='Open externally';
+  actionRow.append(renderBtn,openBtn);
+
+  // iframe preview
+  const frameWrap=document.createElement('div'); frameWrap.style.width='100%'; frameWrap.style.height='360px';
+  frameWrap.style.border='1px solid rgba(255,255,255,0.08)'; frameWrap.style.borderRadius='8px';
+  const iframe=document.createElement('iframe'); iframe.style.width='100%'; iframe.style.height='100%';
+  iframe.setAttribute('sandbox','allow-forms allow-popups allow-modals'); iframe.id='browserFrame';
+  iframe.srcdoc='<html><body style="background:#07121a;color:#eee;font-family:Arial;padding:12px">Empty preview.</body></html>';
+  frameWrap.appendChild(iframe);
+
+  container.append(urlRow,htmlPaste,actionRow,frameWrap);
+  wrap.appendChild(container); screen.appendChild(wrap);
+
+  function sanitizeHTML(raw){
+    let s=raw.replace(/<script[\s\S]*?<\/script>/gi,'');
+    s=s.replace(/<iframe[\s\S]*?<\/iframe>/gi,'');
+    s=s.replace(/<object[\s\S]*?<\/object>/gi,'');
+    s=s.replace(/<embed[\s\S]*?<\/embed>/gi,'');
+    s=s.replace(/\son\w+\s*=\s*(["'])(?:(?!\1)[\s\S])*\1/gi,'');
+    s=s.replace(/(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi,'$1=$2#$2');
+    return s;
+  }
+
+  goBtn.onclick=async()=>{
+    const url=urlInput.value.trim();
+    if(!url){ alert('Enter a URL'); return; }
+    let final=url; if(!/^https?:\/\//i.test(final)) final='https://'+final;
+    try{
+      const resp=await fetch(final,{mode:'cors'});
+      if(!resp.ok) throw new Error(resp.status);
+      const txt=await resp.text();
+      iframe.srcdoc=sanitizeHTML(txt);
+    }catch(e){
+      alert('Could not fetch: '+e+'. Opening externally instead.');
+      window.open(final,'_blank');
+    }
+  };
+  renderBtn.onclick=()=>{
+    const raw=document.getElementById('browserPaste').value;
+    if(!raw){ alert('Paste some HTML first.'); return; }
+    iframe.srcdoc=sanitizeHTML(raw);
+  };
+  openBtn.onclick=()=>{
+    const url=urlInput.value.trim();
+    if(!url){ alert('Enter a URL first.'); return; }
+    let final=url; if(!/^https?:\/\//i.test(final)) final='https://'+final;
+    window.open(final,'_blank');
+  };
+}
 </script>
 </body>
 </html>
